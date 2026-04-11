@@ -1,0 +1,23 @@
+{
+  "name": "rgp-zk",
+  "version": "1.0.0",
+  "description": "ZK circuits and proof utilities for the Reputational Graph Protocol",
+  "scripts": {
+    "compile:threshold": "circom circuits/ReputationThreshold.circom --r1cs --wasm --sym -o build/",
+    "compile:membership": "circom circuits/MembershipProof.circom --r1cs --wasm --sym -o build/",
+    "setup:threshold": "snarkjs groth16 setup build/ReputationThreshold.r1cs pot/pot20_final.ptau build/ReputationThreshold_0000.zkey",
+    "setup:membership": "snarkjs groth16 setup build/MembershipProof.r1cs pot/pot20_final.ptau build/MembershipProof_0000.zkey",
+    "export:vkey:threshold": "snarkjs zkey export verificationkey build/ReputationThreshold_final.zkey build/ReputationThreshold_vkey.json",
+    "export:vkey:membership": "snarkjs zkey export verificationkey build/MembershipProof_final.zkey build/MembershipProof_vkey.json",
+    "generate:verifier:threshold": "snarkjs zkey export solidityverifier build/ReputationThreshold_final.zkey ../contracts/src/ReputationThresholdVerifier.sol",
+    "generate:verifier:membership": "snarkjs zkey export solidityverifier build/MembershipProof_final.zkey ../contracts/src/MembershipProofVerifier.sol"
+  },
+  "dependencies": {
+    "snarkjs": "^0.7.0",
+    "circomlib": "^2.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
