@@ -23,37 +23,48 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#130d2a] to-[#0f0f1a] text-white">
-      {/* Header */}
-      <header className="border-b border-purple-900/30 backdrop-blur-sm sticky top-0 z-10 bg-black/30">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div className="min-h-screen" style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}>
+      <header
+        className="sticky top-0 z-10 border-b"
+        style={{ borderColor: "var(--line)", backgroundColor: "color-mix(in oklab, var(--bg) 88%, black)" }}
+      >
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center text-sm font-bold">
-              RGP
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold"
+              style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
+            >
+              S
             </div>
-            <span className="font-semibold text-lg">Reputational Graph Protocol</span>
+            <div>
+              <p className="text-sm font-semibold tracking-wide">SOUL</p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                Reputation Passport Protocol
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {stats && (
-              <div className="hidden sm:flex gap-4 text-sm text-gray-400">
-                <span>{stats.nodeCount.toLocaleString()} identities</span>
+              <div className="hidden gap-4 text-sm sm:flex" style={{ color: "var(--text-muted)" }}>
+                <span>{stats.nodeCount.toLocaleString()} wallets</span>
                 <span>{stats.edgeCount.toLocaleString()} attestations</span>
               </div>
             )}
             {address ? (
               <div className="flex items-center gap-2">
                 {walletLabel && (
-                  <span className="text-xs text-purple-300 bg-purple-900/20 px-2 py-1 rounded">
+                  <span className="rounded px-2 py-1 text-xs" style={{ backgroundColor: "var(--surface-2)" }}>
                     {walletLabel}
                   </span>
                 )}
-                <span className="text-sm text-gray-300 bg-gray-800 px-3 py-1.5 rounded-lg">
+                <span className="rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: "var(--surface)" }}>
                   {address.slice(0, 6)}…{address.slice(-4)}
                 </span>
                 <button
                   onClick={disconnect}
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className="rounded px-2 py-2 text-sm underline-offset-2 hover:underline"
+                  style={{ color: "var(--text-muted)" }}
                 >
                   Disconnect
                 </button>
@@ -62,115 +73,126 @@ export default function Home() {
               <button
                 onClick={connect}
                 disabled={isConnecting}
-                className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                className="rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
               >
-                {isConnecting ? "Connecting…" : "Connect Wallet"}
+                {isConnecting ? "Connecting..." : "Connect wallet"}
               </button>
             )}
           </div>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-10">
         {error && (
-          <div className="mb-4 text-sm text-red-300 bg-red-900/20 border border-red-900/30 rounded-lg px-4 py-3">
+          <div className="mb-6 rounded-lg border px-4 py-3 text-sm" style={{ borderColor: "#b91c1c", color: "#fecaca" }}>
             {error}
           </div>
         )}
 
         {!address ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div className="w-20 h-20 rounded-2xl bg-purple-900/30 border border-purple-600/30 flex items-center justify-center text-4xl mb-6">
-              🧠
-            </div>
-              <h1 className="text-3xl font-bold mb-3">Soulbound Reputation Graph</h1>
-              <p className="text-gray-400 max-w-md mb-8">
-                Connect your wallet to view your on-chain reputation, manage attestations,
-                and explore the trust graph on Solana.
+          <section className="grid gap-8 py-8 md:grid-cols-[1.1fr_0.9fr] md:items-end">
+            <div>
+              <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
+                One wallet.
+                <br />
+                One <span style={{ color: "var(--accent)" }}>SOUL</span> score.
+              </h1>
+              <p className="mt-5 max-w-[70ch] text-base leading-7" style={{ color: "var(--text-muted)" }}>
+                SOUL turns scattered Token-2022 soulbound credentials from DAOs, hackathons, and DeFi protocols into a
+                portable Reputation Passport that other dApps can query in seconds.
               </p>
-            <button
-              onClick={connect}
-              disabled={isConnecting}
-              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold px-8 py-3 rounded-xl transition-colors"
-            >
-              {isConnecting ? "Connecting…" : "Connect Wallet"}
-            </button>
-          </div>
+              <button
+                onClick={connect}
+                disabled={isConnecting}
+                className="mt-8 rounded-xl px-6 py-3 text-base font-semibold disabled:opacity-60"
+                style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
+              >
+                {isConnecting ? "Connecting..." : "Connect wallet to mint passport"}
+              </button>
+            </div>
+            <div className="rounded-2xl border p-6" style={{ borderColor: "var(--line)", backgroundColor: "var(--surface)" }}>
+              <h2 className="text-xl font-semibold">Reputation Passport</h2>
+              <p className="mt-3 text-sm leading-6" style={{ color: "var(--text-muted)" }}>
+                Issuer authority-weighted scoring, composable API checks, and a single portable NFT identity card for
+                trust-based gating across the Solana ecosystem.
+              </p>
+              <ul className="mt-5 space-y-2 text-sm" style={{ color: "var(--text-muted)" }}>
+                <li>DAO role and contribution proof</li>
+                <li>Hackathon builder history</li>
+                <li>Protocol-level trust and anti-sybil context</li>
+              </ul>
+            </div>
+          </section>
         ) : (
           <>
-            {/* Identity info */}
-            {identity && (
-              <div className="mb-6 p-4 border border-purple-900/30 rounded-xl bg-purple-900/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-purple-700 flex items-center justify-center text-sm font-bold">
+            {identity ? (
+              <section className="mb-6 rounded-xl border p-4" style={{ borderColor: "var(--line)", backgroundColor: "var(--surface)" }}>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold" style={{ backgroundColor: "var(--accent-2)", color: "var(--bg)" }}>
                     #{identity.identity_id}
                   </div>
                   <div>
-                    <div className="font-medium">Identity #{identity.identity_id}</div>
-                    <div className="text-xs text-gray-400 font-mono">{address}</div>
+                    <p className="font-medium">SOUL Passport #{identity.identity_id}</p>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {address}
+                    </p>
                   </div>
-                  <div className="ml-auto">
-                    <span
-                      className={`text-xs px-2 py-1 rounded ${
-                        identity.active
-                          ? "bg-green-900/20 text-green-400"
-                          : "bg-red-900/20 text-red-400"
-                      }`}
-                    >
-                      {identity.active ? "Active" : "Inactive"}
-                    </span>
-                  </div>
+                  <span
+                    className="ml-auto rounded px-2 py-1 text-xs font-medium"
+                    style={{
+                      backgroundColor: identity.active ? "#14532d" : "#7f1d1d",
+                      color: "#ecfdf5",
+                    }}
+                  >
+                    {identity.active ? "Active" : "Inactive"}
+                  </span>
                 </div>
-              </div>
+              </section>
+            ) : (
+              <section className="mb-6 rounded-xl border p-4 text-sm" style={{ borderColor: "#854d0e", color: "#fde68a" }}>
+                No on-chain identity found for this wallet yet. Register your SOUL identity to start building a portable
+                reputation passport.
+              </section>
             )}
 
-            {!identity && (
-                <div className="mb-6 p-4 border border-yellow-900/30 rounded-xl bg-yellow-900/10 text-sm text-yellow-300">
-                 No on-chain identity registered for this wallet. Register to start building reputation.
-                </div>
-              )}
-
-            {/* Tabs */}
-            <div className="flex gap-1 mb-6 bg-gray-900/50 p-1 rounded-lg w-fit">
-              {(["dashboard", "graph", "attest"] as const).map((tab) => (
+            <nav className="mb-6 flex w-fit flex-wrap gap-1 rounded-lg p-1" style={{ backgroundColor: "var(--surface)" }} aria-label="SOUL views">
+              {([
+                ["dashboard", "Passport dashboard"],
+                ["graph", "Trust graph"],
+                ["attest", "Attestations"],
+              ] as const).map(([tab, label]) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-sm font-medium rounded-md capitalize transition-colors ${
-                    activeTab === tab
-                      ? "bg-purple-700 text-white"
-                      : "text-gray-400 hover:text-white"
-                  }`}
+                  className="rounded-md px-4 py-2 text-sm font-medium"
+                  style={{
+                    backgroundColor: activeTab === tab ? "var(--accent-2)" : "transparent",
+                    color: activeTab === tab ? "var(--bg)" : "var(--text-muted)",
+                  }}
                 >
-                  {tab}
+                  {label}
                 </button>
               ))}
-            </div>
+            </nav>
 
-            {/* Tab content */}
-            {activeTab === "dashboard" && identity && (
-              <ReputationDashboard identityId={identity.identity_id} />
-            )}
-
+            {activeTab === "dashboard" && identity && <ReputationDashboard identityId={identity.identity_id} />}
             {activeTab === "graph" && (
-              <div className="text-center py-16 text-gray-500">
-                Graph visualisation — connect to the graph engine API to view the trust graph.
-              </div>
+              <section className="rounded-xl border p-8 text-center" style={{ borderColor: "var(--line)", color: "var(--text-muted)" }}>
+                Trust graph view will render connected issuers, contexts, and edge confidence from the graph engine API.
+              </section>
             )}
-
             {activeTab === "attest" && (
-              <div className="text-center py-16 text-gray-500">
-                Attestation form — connect wallet and identity to issue attestations on-chain.
-              </div>
+              <section className="rounded-xl border p-8 text-center" style={{ borderColor: "var(--line)", color: "var(--text-muted)" }}>
+                Attestation flow is ready for wallet-signed credential issuance and protocol-specific weighting rules.
+              </section>
             )}
           </>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-purple-900/20 mt-16 py-8 text-center text-sm text-gray-600">
-        Soulbound Reputational Graph Protocol — powered by Solana
+      <footer className="mt-12 border-t py-8 text-center text-sm" style={{ borderColor: "var(--line)", color: "var(--text-muted)" }}>
+        SOUL · Portable reputation passports for the Solana builder ecosystem
       </footer>
     </div>
   );

@@ -1,8 +1,8 @@
-use std::collections::{HashMap, HashSet};
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use dashmap::DashMap;
 use crate::error::GraphError;
+use chrono::{DateTime, Utc};
+use dashmap::DashMap;
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 
 /// Unique identity ID (mirrors on-chain identityId)
 pub type IdentityId = u64;
@@ -58,7 +58,7 @@ impl Edge {
         if from == to {
             return Err(GraphError::SelfLoop(from));
         }
-        if raw_weight < 1 || raw_weight > 100 {
+        if !(1..=100).contains(&raw_weight) {
             return Err(GraphError::InvalidWeight(raw_weight as f64, 1.0, 100.0));
         }
         let now = Utc::now();
@@ -193,7 +193,8 @@ impl Graph {
     }
 
     pub fn revoke_edge(&self, attestation_id: u64) -> Result<(), GraphError> {
-        let mut edge = self.edges
+        let mut edge = self
+            .edges
             .get_mut(&attestation_id)
             .ok_or(GraphError::EdgeNotFound(0, 0, attestation_id.to_string()))?;
         edge.revoked = true;
@@ -243,10 +244,7 @@ impl Graph {
 
     /// List all nodes in the graph.
     pub fn all_nodes(&self) -> Vec<Node> {
-        self.nodes
-            .iter()
-            .map(|kv| kv.value().clone())
-            .collect()
+        self.nodes.iter().map(|kv| kv.value().clone()).collect()
     }
 
     /// List all active nodes in a given context.
@@ -299,8 +297,10 @@ mod tests {
     #[test]
     fn test_outgoing_edges() {
         let g = Graph::new();
-        g.upsert_edge(Edge::new(1, 1, 2, 50, "defi").unwrap()).unwrap();
-        g.upsert_edge(Edge::new(2, 1, 3, 70, "defi").unwrap()).unwrap();
+        g.upsert_edge(Edge::new(1, 1, 2, 50, "defi").unwrap())
+            .unwrap();
+        g.upsert_edge(Edge::new(2, 1, 3, 70, "defi").unwrap())
+            .unwrap();
         let out = g.outgoing_edges(1, "defi");
         assert_eq!(out.len(), 2);
     }
@@ -308,7 +308,8 @@ mod tests {
     #[test]
     fn test_revoke_edge() {
         let g = Graph::new();
-        g.upsert_edge(Edge::new(1, 1, 2, 50, "defi").unwrap()).unwrap();
+        g.upsert_edge(Edge::new(1, 1, 2, 50, "defi").unwrap())
+            .unwrap();
         g.revoke_edge(1).unwrap();
         let out = g.outgoing_edges(1, "defi");
         assert!(out.is_empty());

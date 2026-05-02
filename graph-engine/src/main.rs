@@ -61,7 +61,9 @@ async fn get_scores(
         .map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ApiError { error: e.to_string() }),
+                Json(ApiError {
+                    error: e.to_string(),
+                }),
             )
         })
 }
@@ -79,7 +81,9 @@ async fn get_score_by_identity(
         .map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ApiError { error: e.to_string() }),
+                Json(ApiError {
+                    error: e.to_string(),
+                }),
             )
         })
 }

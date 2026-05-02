@@ -1,5 +1,5 @@
-use std::collections::{HashMap, HashSet};
 use crate::graph::{Graph, IdentityId};
+use std::collections::{HashMap, HashSet};
 
 /// Sybil detection configuration
 #[derive(Debug, Clone)]
@@ -48,10 +48,8 @@ impl SybilDetector {
     /// Analyse all nodes in a context and return their Sybil analysis results.
     pub fn analyse(&self, graph: &Graph, context: &str) -> HashMap<IdentityId, SybilAnalysis> {
         // Collect all node IDs involved in this context (outgoing OR incoming edges)
-        let mut node_ids: HashSet<IdentityId> = graph
-            .nodes_in_context(context)
-            .into_iter()
-            .collect();
+        let mut node_ids: HashSet<IdentityId> =
+            graph.nodes_in_context(context).into_iter().collect();
         // Also include nodes that only appear as targets
         for node in graph.all_nodes() {
             let id = node.identity_id;
@@ -64,8 +62,7 @@ impl SybilDetector {
 
         for &id in &node_ids {
             let incoming = graph.incoming_edges(id, context);
-            let unique_attestors: HashSet<IdentityId> =
-                incoming.iter().map(|e| e.from).collect();
+            let unique_attestors: HashSet<IdentityId> = incoming.iter().map(|e| e.from).collect();
             let n_unique = unique_attestors.len();
 
             let cc = self.clustering_coefficient(graph, id, context);
@@ -155,7 +152,8 @@ mod tests {
     fn test_sybil_detection_isolated_node() {
         let g = Graph::new();
         // Node 1 gets only 1 attestation — below threshold
-        g.upsert_edge(Edge::new(1, 2, 1, 50, "defi").unwrap()).unwrap();
+        g.upsert_edge(Edge::new(1, 2, 1, 50, "defi").unwrap())
+            .unwrap();
 
         let detector = SybilDetector::new(SybilConfig {
             min_unique_attestors: 3,
@@ -172,7 +170,8 @@ mod tests {
         let g = Graph::new();
         // Node 10 gets 5 attestations from different identities
         for i in 1u64..=5 {
-            g.upsert_edge(Edge::new(i * 100, i, 10, 50, "defi").unwrap()).unwrap();
+            g.upsert_edge(Edge::new(i * 100, i, 10, 50, "defi").unwrap())
+                .unwrap();
         }
 
         let detector = SybilDetector::new(SybilConfig::default());
@@ -185,7 +184,8 @@ mod tests {
     #[test]
     fn test_penalty_applied() {
         let g = Graph::new();
-        g.upsert_edge(Edge::new(1, 2, 1, 50, "defi").unwrap()).unwrap();
+        g.upsert_edge(Edge::new(1, 2, 1, 50, "defi").unwrap())
+            .unwrap();
 
         let detector = SybilDetector::new(SybilConfig {
             min_unique_attestors: 3,

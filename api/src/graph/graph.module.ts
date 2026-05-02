@@ -62,7 +62,7 @@ export class GraphController {
     // Limit depth to prevent expensive queries
     const maxDepth = Math.min(depth, 2);
 
-    let visited = new Set<number>([identityId]);
+    const visited = new Set<number>([identityId]);
     let frontier = [identityId];
     const edges: { from: number; to: number; weight: number; context: string }[] = [];
 

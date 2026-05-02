@@ -6,14 +6,14 @@
 //! - Sybil-resistance heuristics
 //! - Context partitioning
 
+pub mod error;
 pub mod graph;
 pub mod pagerank;
-pub mod sybil;
 pub mod scoring;
-pub mod error;
+pub mod sybil;
 
-pub use graph::{Graph, Node, Edge, GraphContext};
-pub use pagerank::{PageRankConfig, compute_pagerank};
-pub use scoring::{ReputationScore, ScoringEngine, ScoringConfig};
-pub use sybil::{SybilDetector, SybilConfig};
 pub use error::GraphError;
+pub use graph::{Edge, Graph, GraphContext, Node};
+pub use pagerank::{compute_pagerank, PageRankConfig};
+pub use scoring::{ReputationScore, ScoringConfig, ScoringEngine};
+pub use sybil::{SybilConfig, SybilDetector};

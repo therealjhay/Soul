@@ -9,7 +9,7 @@ import {
   BadRequestException,
   Inject,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBody, ApiQuery } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiQuery } from "@nestjs/swagger";
 import { IsNumber, IsString, IsArray, ArrayMinSize } from "class-validator";
 import { Pool } from "pg";
 import Redis from "ioredis";

@@ -7,11 +7,12 @@ import * as compression from "compression";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ["log", "warn", "error"] });
+  const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3001";
 
   // Security
   app.use(helmet());
   app.use(compression());
-  app.enableCors({ origin: process.env.CORS_ORIGIN || "*" });
+  app.enableCors({ origin: corsOrigin });
 
   // Validation
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));

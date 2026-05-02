@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
-use crate::graph::{Graph, IdentityId};
-use crate::pagerank::{compute_pagerank, normalize_scores, compute_percentiles, PageRankConfig};
-use crate::sybil::{SybilDetector, SybilConfig};
 use crate::error::GraphError;
+use crate::graph::{Graph, IdentityId};
+use crate::pagerank::{compute_pagerank, compute_percentiles, normalize_scores, PageRankConfig};
+use crate::sybil::{SybilConfig, SybilDetector};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Final reputation score for one identity in one context
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,19 +26,10 @@ pub struct ReputationScore {
 }
 
 /// Configuration for the full scoring engine
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ScoringConfig {
     pub pagerank: PageRankConfig,
     pub sybil: SybilConfig,
-}
-
-impl Default for ScoringConfig {
-    fn default() -> Self {
-        Self {
-            pagerank: PageRankConfig::default(),
-            sybil: SybilConfig::default(),
-        }
-    }
 }
 
 /// Orchestrates graph scoring across all contexts
@@ -83,7 +74,9 @@ impl ScoringEngine {
                     normalized_score: penalized_normalized.get(&id).copied().unwrap_or(0.0),
                     percentile: penalized_percentiles.get(&id).copied().unwrap_or(0.0),
                     is_suspected_sybil: sybil_info.map(|s| s.is_suspected_sybil).unwrap_or(false),
-                    clustering_coefficient: sybil_info.map(|s| s.clustering_coefficient).unwrap_or(0.0),
+                    clustering_coefficient: sybil_info
+                        .map(|s| s.clustering_coefficient)
+                        .unwrap_or(0.0),
                     unique_attestors: sybil_info.map(|s| s.unique_attestors).unwrap_or(0),
                     computed_at: now,
                 }
@@ -117,7 +110,8 @@ mod tests {
     fn test_scoring_engine() {
         let g = Graph::new();
         for i in 1u64..=5 {
-            g.upsert_edge(Edge::new(i, i, (i + 1) % 5 + 1, 70, "dao").unwrap()).unwrap();
+            g.upsert_edge(Edge::new(i, i, (i + 1) % 5 + 1, 70, "dao").unwrap())
+                .unwrap();
         }
 
         let engine = ScoringEngine::new(ScoringConfig::default());

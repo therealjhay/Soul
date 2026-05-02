@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Query,
-  ParseIntPipe,
   Inject,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiQuery } from "@nestjs/swagger";

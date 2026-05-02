@@ -6,11 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "next lint --max-warnings=0",
     "test": "jest"
   },
   "dependencies": {
-    "next": "14.0.0",
+    "next": "14.2.31",
     "react": "^18",
     "react-dom": "^18",
     "@tanstack/react-query": "^5.0.0",

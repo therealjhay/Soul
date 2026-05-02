@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use crate::graph::{Graph, IdentityId};
 use crate::error::GraphError;
+use crate::graph::{Graph, IdentityId};
+use std::collections::HashMap;
 
 /// Configuration for the PageRank algorithm
 #[derive(Debug, Clone)]
@@ -89,8 +89,8 @@ pub fn compute_pagerank(
     // Normalize rows
     for i in 0..n {
         if out_sums[i] > 0.0 {
-            for j in 0..n {
-                transition_weights[i][j] /= out_sums[i];
+            for weight in transition_weights[i].iter_mut().take(n) {
+                *weight /= out_sums[i];
             }
         }
     }
@@ -130,7 +130,11 @@ pub fn compute_pagerank(
         ranks = new_ranks;
 
         if delta < config.tolerance {
-            tracing::debug!("PageRank converged in {} iterations (delta={})", iter + 1, delta);
+            tracing::debug!(
+                "PageRank converged in {} iterations (delta={})",
+                iter + 1,
+                delta
+            );
             break;
         }
 
@@ -161,7 +165,7 @@ pub fn normalize_scores(raw: &HashMap<IdentityId, f64>) -> HashMap<IdentityId, f
     }
     let max = raw.values().cloned().fold(f64::NEG_INFINITY, f64::max);
     if max == 0.0 {
-        return raw.iter().map(|(k, _)| (*k, 0.0)).collect();
+        return raw.keys().map(|k| (*k, 0.0)).collect();
     }
     raw.iter().map(|(k, &v)| (*k, (v / max) * 1000.0)).collect()
 }
@@ -191,10 +195,13 @@ mod tests {
     fn build_test_graph() -> Graph {
         let g = Graph::new();
         // Simple chain: 1 → 2 → 3
-        g.upsert_edge(Edge::new(1, 1, 2, 80, "defi").unwrap()).unwrap();
-        g.upsert_edge(Edge::new(2, 2, 3, 60, "defi").unwrap()).unwrap();
+        g.upsert_edge(Edge::new(1, 1, 2, 80, "defi").unwrap())
+            .unwrap();
+        g.upsert_edge(Edge::new(2, 2, 3, 60, "defi").unwrap())
+            .unwrap();
         // Mutual link: 2 ↔ 3
-        g.upsert_edge(Edge::new(3, 3, 2, 50, "defi").unwrap()).unwrap();
+        g.upsert_edge(Edge::new(3, 3, 2, 50, "defi").unwrap())
+            .unwrap();
         g
     }
 
@@ -219,7 +226,10 @@ mod tests {
         raw.insert(2u64, 0.6);
         raw.insert(3u64, 0.1);
         let normalized = normalize_scores(&raw);
-        let max_val = normalized.values().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let max_val = normalized
+            .values()
+            .cloned()
+            .fold(f64::NEG_INFINITY, f64::max);
         assert!((max_val - 1000.0).abs() < 1e-6);
     }
 
@@ -239,10 +249,16 @@ mod tests {
         let g = build_test_graph();
         // Give node 1 many SBTs
         g.update_sbt_count(1, 10);
-        let config = PageRankConfig { sbt_multiplier: 0.5, ..Default::default() };
+        let config = PageRankConfig {
+            sbt_multiplier: 0.5,
+            ..Default::default()
+        };
         let scores = compute_pagerank(&g, "defi", &config).unwrap();
         // Node 1's score should be boosted significantly
-        let raw_config = PageRankConfig { sbt_multiplier: 0.0, ..Default::default() };
+        let raw_config = PageRankConfig {
+            sbt_multiplier: 0.0,
+            ..Default::default()
+        };
         let raw_scores = compute_pagerank(&g, "defi", &raw_config).unwrap();
         assert!(scores[&1] > raw_scores[&1]);
     }
