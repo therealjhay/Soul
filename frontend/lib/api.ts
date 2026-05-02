@@ -8,7 +8,7 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Existing Types ────────────────────────────────────────────────────────
 
 export interface ReputationScore {
   identity_id: number;
@@ -32,11 +32,15 @@ export interface SBTToken {
   token_id: number;
   holder: string;
   issuer: string;
+  issuer_name: string;
   context: string;
+  category: "DEV" | "GOVERNANCE" | "SOCIAL" | "DEFI" | "OTHER";
   metadata_uri: string;
   expires_at: string | null;
   revoked: boolean;
   issued_at: string;
+  weight_points: number;
+  description?: string;
 }
 
 export interface Attestation {
@@ -63,7 +67,60 @@ export interface GraphEdge {
   context: string;
 }
 
-// ─── API Functions ────────────────────────────────────────────────────────────
+// ─── New SOUL Types ────────────────────────────────────────────────────────
+
+export interface WalletReputation {
+  wallet: string;
+  score: number;
+  tier: "NEWCOMER" | "BUILDER" | "VERIFIED DEV" | "GOVERNANCE VETERAN" | "LEGEND";
+  breakdown: {
+    category: string;
+    score: number;
+    percentage: number;
+  }[];
+  last_updated: string;
+}
+
+export interface Issuer {
+  id: string;
+  name: string;
+  type: "DAO" | "PROTOCOL" | "HACKATHON" | "SOCIAL" | "DEFI";
+  sbts_issued: number;
+  weight: number;
+  status: "VERIFIED" | "PENDING" | "REVOKED";
+  verified: boolean;
+  description?: string;
+  sbt_types?: string[];
+  integration_url?: string;
+}
+
+export interface SBTEvent {
+  id: string;
+  event_type: "SBT_ISSUED" | "SBT_REVOKED" | "PASSPORT_MINTED";
+  wallet: string;
+  issuer_name: string;
+  sbt_type: string;
+  timestamp: string;
+}
+
+export interface ProtocolStats {
+  total_wallets: number;
+  sbts_issued: number;
+  issuers_registered: number;
+}
+
+export interface Passport {
+  wallet: string;
+  exists: boolean;
+  score: number;
+  tier: string;
+  issued_at: string;
+  last_updated: string;
+  sbt_count: number;
+  version: string;
+}
+
+// ─── Existing API Functions ────────────────────────────────────────────────
 
 export const getReputationScores = (context?: string, limit = 50, offset = 0) =>
   api.get<ReputationScore[]>("/reputation", { params: { context, limit, offset } }).then((r) => r.data);
@@ -93,9 +150,31 @@ export const getGraphEdges = (context?: string, limit = 500) =>
   api.get<GraphEdge[]>("/graph/edges", { params: { context, limit } }).then((r) => r.data);
 
 export const getGraphNeighbours = (identityId: number, context?: string, depth = 1) =>
-  api.get<{ nodes: number[]; edges: GraphEdge[] }>("/graph/neighbours", {
-    params: { identityId, context, depth },
-  }).then((r) => r.data);
+  api
+    .get<{ nodes: number[]; edges: GraphEdge[] }>("/graph/neighbours", {
+      params: { identityId, context, depth },
+    })
+    .then((r) => r.data);
 
 export const checkThreshold = (identityId: number, context: string, threshold: number) =>
   api.get(`/zk/threshold/${identityId}`, { params: { context, threshold } }).then((r) => r.data);
+
+// ─── New SOUL API Functions ────────────────────────────────────────────────
+
+export const getWalletSBTs = (wallet: string) =>
+  api.get<SBTToken[]>(`/sbts/${wallet}`).then((r) => r.data);
+
+export const getWalletReputation = (wallet: string) =>
+  api.get<WalletReputation>(`/reputation/wallet/${wallet}`).then((r) => r.data);
+
+export const getIssuers = () =>
+  api.get<Issuer[]>("/issuers").then((r) => r.data);
+
+export const getLiveEvents = () =>
+  api.get<SBTEvent[]>("/events").then((r) => r.data);
+
+export const getProtocolStats = () =>
+  api.get<ProtocolStats>("/stats").then((r) => r.data);
+
+export const getPassport = (wallet: string) =>
+  api.get<Passport>(`/passport/${wallet}`).then((r) => r.data);

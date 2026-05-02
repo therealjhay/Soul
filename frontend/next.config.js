@@ -10,6 +10,15 @@ const nextConfig = {
     NEXT_PUBLIC_ATTESTATION_PROGRAM_ID: process.env.NEXT_PUBLIC_ATTESTATION_PROGRAM_ID || "",
     NEXT_PUBLIC_RGP_PROGRAM_ID: process.env.NEXT_PUBLIC_RGP_PROGRAM_ID || "",
   },
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      "pino-pretty": false,
+      lokijs: false,
+      encoding: false,
+    };
+    return config;
+  },
 };
 
 module.exports = nextConfig;
