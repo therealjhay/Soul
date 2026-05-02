@@ -1,46 +1,49 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ethers } from "ethers";
 
 export interface WalletState {
   address: string | null;
-  chainId: number | null;
+  walletLabel: string | null;
   isConnecting: boolean;
   error: string | null;
   connect: () => Promise<void>;
   disconnect: () => void;
 }
 
+interface SolanaProvider {
+  isPhantom?: boolean;
+  publicKey?: { toString: () => string };
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  on: (event: string, listener: (...args: unknown[]) => void) => void;
+  removeListener: (event: string, listener: (...args: unknown[]) => void) => void;
+}
+
 declare global {
   interface Window {
-    ethereum?: {
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-      on: (event: string, listener: (...args: unknown[]) => void) => void;
-      removeListener: (event: string, listener: (...args: unknown[]) => void) => void;
-    };
+    solana?: SolanaProvider;
   }
 }
 
 export function useWallet(): WalletState {
   const [address, setAddress] = useState<string | null>(null);
-  const [chainId, setChainId] = useState<number | null>(null);
+  const [walletLabel, setWalletLabel] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const connect = useCallback(async () => {
-    if (!window.ethereum) {
-      setError("No EVM wallet detected. Please install MetaMask.");
+    if (!window.solana) {
+      setError("No Solana wallet detected. Please install Phantom.");
       return;
     }
     setIsConnecting(true);
     setError(null);
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const accounts = await provider.send("eth_requestAccounts", []);
-      const network = await provider.getNetwork();
-      setAddress((accounts as string[])[0]);
-      setChainId(Number(network.chainId));
+      await window.solana.connect();
+      const wallet = window.solana.publicKey?.toString() ?? null;
+      setAddress(wallet);
+      setWalletLabel(window.solana.isPhantom ? "Phantom" : "Solana Wallet");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Connection failed");
     } finally {
@@ -49,30 +52,34 @@ export function useWallet(): WalletState {
   }, []);
 
   const disconnect = useCallback(() => {
+    if (window.solana) {
+      void window.solana.disconnect();
+    }
     setAddress(null);
-    setChainId(null);
+    setWalletLabel(null);
   }, []);
 
   useEffect(() => {
-    if (!window.ethereum) return;
+    if (!window.solana) return;
 
-    const handleAccountsChanged = (accounts: unknown) => {
-      const accs = accounts as string[];
-      setAddress(accs.length > 0 ? accs[0] : null);
+    const handleConnect = () => {
+      const wallet = window.solana?.publicKey?.toString() ?? null;
+      setAddress(wallet);
     };
 
-    const handleChainChanged = (chainIdHex: unknown) => {
-      setChainId(parseInt(chainIdHex as string, 16));
+    const handleDisconnect = () => {
+      setAddress(null);
+      setWalletLabel(null);
     };
 
-    window.ethereum.on("accountsChanged", handleAccountsChanged);
-    window.ethereum.on("chainChanged", handleChainChanged);
+    window.solana.on("connect", handleConnect);
+    window.solana.on("disconnect", handleDisconnect);
 
     return () => {
-      window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
-      window.ethereum?.removeListener("chainChanged", handleChainChanged);
+      window.solana?.removeListener("connect", handleConnect);
+      window.solana?.removeListener("disconnect", handleDisconnect);
     };
   }, []);
 
-  return { address, chainId, isConnecting, error, connect, disconnect };
+  return { address, walletLabel, isConnecting, error, connect, disconnect };
 }

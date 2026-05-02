@@ -1,133 +1,122 @@
-import { ethers } from "ethers";
+import { Commitment, Connection, PublicKey } from "@solana/web3.js";
 import Redis from "ioredis";
 import { logger } from "../logger";
 import { DatabaseManager } from "../db/DatabaseManager";
 
-const ATTESTATION_ABI = [
-  "event AttestationCreated(uint256 indexed attestationId, uint256 indexed fromIdentityId, uint256 indexed toIdentityId, uint8 weight, string context, string metadataURI, uint256 timestamp)",
-  "event AttestationUpdated(uint256 indexed attestationId, uint8 newWeight, string newMetadataURI, uint256 timestamp)",
-  "event AttestationRevoked(uint256 indexed attestationId, uint256 indexed fromIdentityId, uint256 indexed toIdentityId, uint256 timestamp)",
-];
-
 export class AttestationListener {
-  private contract: ethers.Contract;
   private running = false;
+  private subscriptionId: number | null = null;
+  private readonly commitment: Commitment = "confirmed";
 
   constructor(
-    private readonly provider: ethers.JsonRpcProvider,
-    private readonly address: string,
+    private readonly connection: Connection,
+    private readonly programId: string,
     private readonly db: DatabaseManager,
     private readonly redis: Redis,
-    private readonly startBlock: number,
-    private readonly confirmations: number
-  ) {
-    this.contract = new ethers.Contract(address, ATTESTATION_ABI, provider);
-  }
+    private readonly startSlot: number
+  ) {}
 
   async start(): Promise<void> {
-    if (!this.address) {
-      logger.warn("AttestationListener: no contract address configured, skipping");
+    if (!this.programId) {
+      logger.warn("AttestationListener: no Solana program ID configured, skipping");
       return;
     }
     this.running = true;
     await this.catchUp();
     this.subscribeToLiveEvents();
-    logger.info({ contract: this.address }, "AttestationListener started");
+    logger.info("AttestationListener started", { programId: this.programId });
   }
 
   async stop(): Promise<void> {
     this.running = false;
-    this.contract.removeAllListeners();
+    if (this.subscriptionId !== null) {
+      await this.connection.removeOnLogsListener(this.subscriptionId);
+      this.subscriptionId = null;
+    }
   }
 
   private async catchUp(): Promise<void> {
-    const lastBlock = await this.db.getLastIndexedBlock(this.address);
-    const from = Math.max(lastBlock + 1, this.startBlock);
-    const current = await this.provider.getBlockNumber();
-    const to = current - this.confirmations;
-    if (from > to) return;
-
-    const createdFilter = this.contract.filters.AttestationCreated();
-    const events = await this.contract.queryFilter(createdFilter, from, to);
-    for (const e of events as ethers.EventLog[]) {
-      await this.handleCreated(e);
-    }
-
-    const revokedFilter = this.contract.filters.AttestationRevoked();
-    const revoked = await this.contract.queryFilter(revokedFilter, from, to);
-    for (const e of revoked as ethers.EventLog[]) {
-      await this.handleRevoked(e);
-    }
-
-    await this.db.setLastIndexedBlock(this.address, to);
+    const lastSlot = await this.db.getLastIndexedBlock(this.programId);
+    const toSlot = await this.connection.getSlot(this.commitment);
+    const fromSlot = Math.max(lastSlot + 1, this.startSlot);
+    if (fromSlot > toSlot) return;
+    await this.db.setLastIndexedBlock(this.programId, toSlot);
+    logger.info("Attestation listener checkpoint synced", { fromSlot, toSlot });
   }
 
   private subscribeToLiveEvents(): void {
-    this.contract.on("AttestationCreated", async (...args) => {
-      await this.handleCreated(args[args.length - 1] as ethers.EventLog);
-    });
-    this.contract.on("AttestationRevoked", async (...args) => {
-      await this.handleRevoked(args[args.length - 1] as ethers.EventLog);
-    });
-    this.contract.on("AttestationUpdated", async (...args) => {
-      await this.handleUpdated(args[args.length - 1] as ethers.EventLog);
-    });
+    const program = new PublicKey(this.programId);
+    this.subscriptionId = this.connection.onLogs(
+      program,
+      async ({ logs, signature }) => {
+        for (const raw of logs) {
+          const line = raw.includes("RGP:") ? raw.slice(raw.indexOf("RGP:")) : "";
+          if (line.startsWith("RGP:ATTESTATION_CREATED:")) {
+            await this.handleCreated(line, signature);
+          } else if (line.startsWith("RGP:ATTESTATION_REVOKED:")) {
+            await this.handleRevoked(line);
+          } else if (line.startsWith("RGP:ATTESTATION_UPDATED:")) {
+            await this.handleUpdated(line);
+          }
+        }
+      },
+      this.commitment
+    );
   }
 
-  private async handleCreated(event: ethers.EventLog): Promise<void> {
+  private async handleCreated(line: string, txHash: string): Promise<void> {
     try {
-      const [attestationId, fromId, toId, weight, context, metadataUri, timestamp] = event.args;
-      const ts = new Date(Number(timestamp) * 1000);
+      const [, , attestationId, fromId, toId, weight, context = "general"] = line.split(":");
+      const slot = await this.connection.getSlot(this.commitment);
+      const ts = new Date();
       await this.db.upsertAttestation({
-        attestationId,
-        fromIdentityId: fromId,
-        toIdentityId: toId,
+        attestationId: BigInt(attestationId),
+        fromIdentityId: BigInt(fromId),
+        toIdentityId: BigInt(toId),
         weight: Number(weight),
         context,
-        metadataUri,
+        metadataUri: "",
         revoked: false,
         createdAt: ts,
         updatedAt: ts,
-        blockNumber: event.blockNumber,
-        txHash: event.transactionHash,
+        blockNumber: slot,
+        txHash,
       });
-      // Invalidate cached scores for both identities
-      await this.invalidateScoreCache(fromId.toString());
-      await this.invalidateScoreCache(toId.toString());
-      logger.debug({ attestationId: attestationId.toString() }, "Attestation created");
+      await this.invalidateScoreCache(fromId);
+      await this.invalidateScoreCache(toId);
+      logger.debug("Attestation created", { attestationId });
     } catch (err) {
-      logger.error({ err }, "Error handling AttestationCreated");
+      logger.error("Error handling AttestationCreated", { err });
     }
   }
 
-  private async handleRevoked(event: ethers.EventLog): Promise<void> {
+  private async handleRevoked(line: string): Promise<void> {
     try {
-      const [attestationId, fromId, toId] = event.args;
+      const [, , attestationId, , toId] = line.split(":");
       await this.db.db.query(
         "UPDATE attestations SET revoked = TRUE, updated_at = NOW() WHERE attestation_id = $1",
-        [attestationId.toString()]
+        [attestationId]
       );
-      await this.invalidateScoreCache(toId.toString());
-      logger.debug({ attestationId: attestationId.toString() }, "Attestation revoked");
+      await this.invalidateScoreCache(toId);
+      logger.debug("Attestation revoked", { attestationId });
     } catch (err) {
-      logger.error({ err }, "Error handling AttestationRevoked");
+      logger.error("Error handling AttestationRevoked", { err });
     }
   }
 
-  private async handleUpdated(event: ethers.EventLog): Promise<void> {
+  private async handleUpdated(line: string): Promise<void> {
     try {
-      const [attestationId, newWeight, newMetadataUri, timestamp] = event.args;
+      const [, , attestationId, newWeight] = line.split(":");
       await this.db.db.query(
-        "UPDATE attestations SET weight = $1, metadata_uri = $2, updated_at = $3 WHERE attestation_id = $4",
+        "UPDATE attestations SET weight = $1, updated_at = $2 WHERE attestation_id = $3",
         [
           Number(newWeight),
-          newMetadataUri,
-          new Date(Number(timestamp) * 1000).toISOString(),
-          attestationId.toString(),
+          new Date().toISOString(),
+          attestationId,
         ]
       );
     } catch (err) {
-      logger.error({ err }, "Error handling AttestationUpdated");
+      logger.error("Error handling AttestationUpdated", { err });
     }
   }
 

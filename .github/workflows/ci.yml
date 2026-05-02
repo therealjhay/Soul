@@ -7,9 +7,9 @@ on:
     branches: [main, develop]
 
 jobs:
-  # ─── Contracts ───────────────────────────────────────────────────────────────
+  # ─── Solana Program ──────────────────────────────────────────────────────────
   contracts:
-    name: Smart Contracts
+    name: Solana Program
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -17,21 +17,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: contracts/package-lock.json
+          components: rustfmt, clippy
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Compile contracts
-        run: npm run compile
+      - name: Build
+        run: cargo build --workspace
 
       - name: Run tests
-        run: npm test
+        run: cargo test --workspace
 
   # ─── Graph Engine (Rust) ─────────────────────────────────────────────────────
   graph-engine:
@@ -141,4 +136,4 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:3000
-          NEXT_PUBLIC_CHAIN_ID: "10143"
+          NEXT_PUBLIC_SOLANA_CLUSTER: "devnet"

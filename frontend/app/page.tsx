@@ -7,7 +7,7 @@ import { getIdentityByWallet, getGraphStats } from "../lib/api";
 import { ReputationDashboard } from "../components/ReputationDashboard";
 
 export default function Home() {
-  const { address, chainId, isConnecting, error, connect, disconnect } = useWallet();
+  const { address, walletLabel, isConnecting, error, connect, disconnect } = useWallet();
   const [activeTab, setActiveTab] = useState<"dashboard" | "graph" | "attest">("dashboard");
 
   const { data: identity } = useQuery({
@@ -21,9 +21,6 @@ export default function Home() {
     queryKey: ["graph", "stats"],
     queryFn: getGraphStats,
   });
-
-  const MONAD_CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || "10143", 10);
-  const isWrongNetwork = address && chainId && chainId !== MONAD_CHAIN_ID;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#130d2a] to-[#0f0f1a] text-white">
@@ -46,9 +43,9 @@ export default function Home() {
             )}
             {address ? (
               <div className="flex items-center gap-2">
-                {isWrongNetwork && (
-                  <span className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded">
-                    Wrong Network
+                {walletLabel && (
+                  <span className="text-xs text-purple-300 bg-purple-900/20 px-2 py-1 rounded">
+                    {walletLabel}
                   </span>
                 )}
                 <span className="text-sm text-gray-300 bg-gray-800 px-3 py-1.5 rounded-lg">
@@ -87,11 +84,11 @@ export default function Home() {
             <div className="w-20 h-20 rounded-2xl bg-purple-900/30 border border-purple-600/30 flex items-center justify-center text-4xl mb-6">
               🧠
             </div>
-            <h1 className="text-3xl font-bold mb-3">Soulbound Reputation Graph</h1>
-            <p className="text-gray-400 max-w-md mb-8">
-              Connect your wallet to view your on-chain reputation, manage attestations,
-              and explore the trust graph on Monad.
-            </p>
+              <h1 className="text-3xl font-bold mb-3">Soulbound Reputation Graph</h1>
+              <p className="text-gray-400 max-w-md mb-8">
+                Connect your wallet to view your on-chain reputation, manage attestations,
+                and explore the trust graph on Solana.
+              </p>
             <button
               onClick={connect}
               disabled={isConnecting}
@@ -129,10 +126,10 @@ export default function Home() {
             )}
 
             {!identity && (
-              <div className="mb-6 p-4 border border-yellow-900/30 rounded-xl bg-yellow-900/10 text-sm text-yellow-300">
-                No on-chain identity registered for this wallet. Register to start building reputation.
-              </div>
-            )}
+                <div className="mb-6 p-4 border border-yellow-900/30 rounded-xl bg-yellow-900/10 text-sm text-yellow-300">
+                 No on-chain identity registered for this wallet. Register to start building reputation.
+                </div>
+              )}
 
             {/* Tabs */}
             <div className="flex gap-1 mb-6 bg-gray-900/50 p-1 rounded-lg w-fit">
@@ -173,7 +170,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-purple-900/20 mt-16 py-8 text-center text-sm text-gray-600">
-        Soulbound Reputational Graph Protocol — powered by Monad
+        Soulbound Reputational Graph Protocol — powered by Solana
       </footer>
     </div>
   );

@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { Commitment, Connection } from "@solana/web3.js";
 import { Pool } from "pg";
 import Redis from "ioredis";
 import * as dotenv from "dotenv";
@@ -11,23 +11,23 @@ import { DatabaseManager } from "./db/DatabaseManager";
 dotenv.config();
 
 const {
-  RPC_URL = "http://localhost:8545",
+  SOLANA_RPC_URL = "https://api.devnet.solana.com",
   DATABASE_URL = "postgresql://rgp:rgp@localhost:5432/rgp",
   REDIS_URL = "redis://localhost:6379",
-  IDENTITY_CONTRACT = "",
-  SBT_CONTRACT = "",
-  ATTESTATION_CONTRACT = "",
-  START_BLOCK = "0",
-  CONFIRMATION_BLOCKS = "2",
+  IDENTITY_PROGRAM_ID = "",
+  SBT_PROGRAM_ID = "",
+  ATTESTATION_PROGRAM_ID = "",
+  START_SLOT = "0",
+  COMMITMENT = "confirmed",
 } = process.env;
 
 async function main() {
   logger.info("Starting RGP Indexer");
 
-  // Initialise provider
-  const provider = new ethers.JsonRpcProvider(RPC_URL);
-  const network = await provider.getNetwork();
-  logger.info({ chainId: network.chainId.toString() }, "Connected to chain");
+  const commitment = COMMITMENT as Commitment;
+  const connection = new Connection(SOLANA_RPC_URL, commitment);
+  const version = await connection.getVersion();
+  logger.info("Connected to Solana RPC", { rpc: SOLANA_RPC_URL, solanaCore: version["solana-core"] });
 
   // Initialise DB
   const pool = new Pool({ connectionString: DATABASE_URL });
@@ -36,17 +36,16 @@ async function main() {
 
   // Initialise Redis
   const redis = new Redis(REDIS_URL);
-  redis.on("error", (err) => logger.error({ err }, "Redis error"));
+  redis.on("error", (err) => logger.error("Redis error", { err }));
   logger.info("Redis connected");
 
-  const startBlock = parseInt(START_BLOCK, 10);
-  const confirmations = parseInt(CONFIRMATION_BLOCKS, 10);
+  const startSlot = parseInt(START_SLOT, 10);
 
   // Start listeners
   const listeners = [
-    new IdentityListener(provider, IDENTITY_CONTRACT, db, redis, startBlock, confirmations),
-    new SBTListener(provider, SBT_CONTRACT, db, redis, startBlock, confirmations),
-    new AttestationListener(provider, ATTESTATION_CONTRACT, db, redis, startBlock, confirmations),
+    new IdentityListener(connection, IDENTITY_PROGRAM_ID, db, redis, startSlot),
+    new SBTListener(connection, SBT_PROGRAM_ID, db, redis, startSlot),
+    new AttestationListener(connection, ATTESTATION_PROGRAM_ID, db, redis, startSlot),
   ];
 
   for (const listener of listeners) {
@@ -66,6 +65,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  logger.error({ err }, "Indexer startup failed");
+  logger.error("Indexer startup failed", { err });
   process.exit(1);
 });

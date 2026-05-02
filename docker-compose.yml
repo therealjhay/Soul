@@ -45,15 +45,15 @@ services:
     container_name: rgp-indexer
     restart: unless-stopped
     environment:
-      RPC_URL: ${RPC_URL:-http://host.docker.internal:8545}
+      SOLANA_RPC_URL: ${SOLANA_RPC_URL:-https://api.devnet.solana.com}
       DATABASE_URL: postgresql://${POSTGRES_USER:-rgp}:${POSTGRES_PASSWORD:-rgp}@postgres:5432/${POSTGRES_DB:-rgp}
       REDIS_URL: redis://redis:6379
-      IDENTITY_CONTRACT: ${IDENTITY_CONTRACT:-}
-      SBT_CONTRACT: ${SBT_CONTRACT:-}
-      ATTESTATION_CONTRACT: ${ATTESTATION_CONTRACT:-}
-      ANCHOR_CONTRACT: ${ANCHOR_CONTRACT:-}
-      START_BLOCK: ${START_BLOCK:-0}
-      CONFIRMATION_BLOCKS: ${CONFIRMATION_BLOCKS:-2}
+      IDENTITY_PROGRAM_ID: ${IDENTITY_PROGRAM_ID:-}
+      SBT_PROGRAM_ID: ${SBT_PROGRAM_ID:-}
+      ATTESTATION_PROGRAM_ID: ${ATTESTATION_PROGRAM_ID:-}
+      RGP_PROGRAM_ID: ${RGP_PROGRAM_ID:-}
+      START_SLOT: ${START_SLOT:-0}
+      COMMITMENT: ${COMMITMENT:-confirmed}
     depends_on:
       postgres:
         condition: service_healthy
@@ -111,11 +111,11 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
-        NEXT_PUBLIC_CHAIN_ID: ${NEXT_PUBLIC_CHAIN_ID:-10143}
-        NEXT_PUBLIC_IDENTITY_CONTRACT: ${IDENTITY_CONTRACT:-}
-        NEXT_PUBLIC_SBT_CONTRACT: ${SBT_CONTRACT:-}
-        NEXT_PUBLIC_ATTESTATION_CONTRACT: ${ATTESTATION_CONTRACT:-}
-        NEXT_PUBLIC_ANCHOR_CONTRACT: ${ANCHOR_CONTRACT:-}
+        NEXT_PUBLIC_SOLANA_CLUSTER: ${NEXT_PUBLIC_SOLANA_CLUSTER:-devnet}
+        NEXT_PUBLIC_IDENTITY_PROGRAM_ID: ${IDENTITY_PROGRAM_ID:-}
+        NEXT_PUBLIC_SBT_PROGRAM_ID: ${SBT_PROGRAM_ID:-}
+        NEXT_PUBLIC_ATTESTATION_PROGRAM_ID: ${ATTESTATION_PROGRAM_ID:-}
+        NEXT_PUBLIC_RGP_PROGRAM_ID: ${RGP_PROGRAM_ID:-}
     container_name: rgp-frontend
     restart: unless-stopped
     ports:

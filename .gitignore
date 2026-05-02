@@ -12,11 +12,12 @@ dist/
 # Rust
 target/
 
-# Hardhat
+# Solana program build
 cache/
 artifacts/
 typechain-types/
 contracts/coverage/
+.anchor/
 
 # ZK
 zk/build/

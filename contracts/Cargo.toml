@@ -1,0 +1,4 @@
+[workspace]
+members = ["programs/rgp"]
+resolver = "2"
+

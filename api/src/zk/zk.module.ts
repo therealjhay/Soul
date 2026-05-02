@@ -13,7 +13,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiQuery } from "@nestjs/swagger";
 import { IsNumber, IsString, IsArray, ArrayMinSize } from "class-validator";
 import { Pool } from "pg";
 import Redis from "ioredis";
-import { ethers } from "ethers";
+import { keccak_256 } from "@noble/hashes/sha3";
 import { PG_POOL, REDIS_CLIENT } from "../common/database.module";
 
 class VerifyScoreDto {
@@ -54,10 +54,7 @@ export class ZkController {
     }
 
     const root: string = anchor.rows[0].merkle_root;
-    const leaf = ethers.solidityPackedKeccak256(
-      ["uint256", "string", "uint256"],
-      [dto.identityId, dto.context, dto.score]
-    );
+    const leaf = this.hashHex([dto.identityId.toString(), dto.context, dto.score.toString()]);
 
     const valid = this.verifyMerkleProof(dto.proof, root, leaf);
     return { valid, root, leaf };
@@ -106,9 +103,15 @@ export class ZkController {
     for (const sibling of proof) {
       const a = BigInt(computed) <= BigInt(sibling) ? computed : sibling;
       const b = BigInt(computed) <= BigInt(sibling) ? sibling : computed;
-      computed = ethers.solidityPackedKeccak256(["bytes32", "bytes32"], [a, b]);
+      computed = this.hashHex([a, b]);
     }
     return computed.toLowerCase() === root.toLowerCase();
+  }
+
+  private hashHex(parts: Array<string | number | bigint>): string {
+    const payload = new TextEncoder().encode(parts.map((p) => p.toString()).join("|"));
+    const digest = keccak_256(payload);
+    return `0x${Buffer.from(digest).toString("hex")}`;
   }
 }
 
