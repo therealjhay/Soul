@@ -16,11 +16,11 @@
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
 h1,
 h2,
 h3 {
-  font-family: var(--font-display), system-ui, sans-serif;
+  font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
 }
