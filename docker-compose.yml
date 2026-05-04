@@ -110,16 +110,16 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
-        NEXT_PUBLIC_SOLANA_CLUSTER: ${NEXT_PUBLIC_SOLANA_CLUSTER:-devnet}
-        NEXT_PUBLIC_IDENTITY_PROGRAM_ID: ${IDENTITY_PROGRAM_ID:-}
-        NEXT_PUBLIC_SBT_PROGRAM_ID: ${SBT_PROGRAM_ID:-}
-        NEXT_PUBLIC_ATTESTATION_PROGRAM_ID: ${ATTESTATION_PROGRAM_ID:-}
-        NEXT_PUBLIC_RGP_PROGRAM_ID: ${RGP_PROGRAM_ID:-}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        VITE_SOLANA_CLUSTER: ${VITE_SOLANA_CLUSTER:-devnet}
+        VITE_IDENTITY_PROGRAM_ID: ${IDENTITY_PROGRAM_ID:-}
+        VITE_SBT_PROGRAM_ID: ${SBT_PROGRAM_ID:-}
+        VITE_ATTESTATION_PROGRAM_ID: ${ATTESTATION_PROGRAM_ID:-}
+        VITE_RGP_PROGRAM_ID: ${RGP_PROGRAM_ID:-}
     container_name: rgp-frontend
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3001:80"
     depends_on:
       - api
 

@@ -1,0 +1,269 @@
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Google Fonts ───────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');/* ─── Brutalist-Cyber Palette & Variables ──────────────────────────────── */
+:root {
+  /* Colors */
+  --bg-base:     #0A0A0A;
+  --bg-surface:  #111111;
+  --bg-elevated: #1A1A1A;
+  
+  --border:        #242424;
+  --border-active: #C8FF00;
+  
+  --text-primary:   #F0ECE4;
+  --text-secondary: #7A7A7A;
+  --text-muted:     #333333;
+  
+  --accent:       #C8FF00;
+  --accent-dim:   #7A9900;
+  
+  --error:     #FF2D2D;
+  --warning:   #F5A623;
+  --white:     #FFFFFF;
+
+  /* Typography */
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+
+  /* Layout */
+  --nav-h: 80px;
+
+  /* Easings */
+  --ease-std: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.7, 0, 0.84, 0);
+}
+
+/* ─── Base Reset ─────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border-radius: 0 !important; /* Zero rounded corners globally */
+  box-shadow: none !important; /* No shadows */
+}
+
+html {
+  font-size: 16px;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-mono); /* DM Mono base */
+}
+
+/* 4% Noise Overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  position: relative;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 400; /* Bebas is 400 only */
+  line-height: 0.9;
+  color: var(--text-primary);
+  letter-spacing: 0; /* No letter spacing for headings */
+  text-transform: uppercase;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-family: var(--font-mono);
+}
+
+input, select, textarea {
+  font-family: var(--font-mono);
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+/* ─── Typography Utilities ───────────────────────────────────────────────── */
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+.data, .address, .hash, code, .stat-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 16px 32px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  overflow: hidden;
+  transition: color 150ms var(--ease-std), border-color 150ms var(--ease-std);
+  z-index: 1;
+}
+
+.btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-elevated);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 150ms var(--ease-std);
+  z-index: -1;
+}
+
+.btn:hover::after {
+  transform: scaleX(1);
+}
+
+.btn:hover {
+  border-color: var(--text-secondary);
+}
+
+.btn:active, .btn--active {
+  border-color: var(--accent) !important;
+  color: #000 !important;
+}
+
+.btn:active::after, .btn--active::after {
+  background: var(--accent) !important;
+  transform: scaleX(1);
+}
+
+.btn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* ─── Inputs ─────────────────────────────────────────────────────────────── */
+
+.input-field {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 14px;
+  padding: 16px 20px;
+  outline: none;
+  transition: border-color 150ms var(--ease-std);
+}
+
+.input-field:focus {
+  border-color: var(--accent);
+}
+
+.input-field::placeholder {
+  color: var(--text-muted);
+}
+
+.input-label {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+/* ─── Utilities ──────────────────────────────────────────────────────────── */
+
+.text-accent   { color: var(--accent); }
+.text-error    { color: var(--error); }
+.text-warning  { color: var(--warning); }
+.text-white    { color: var(--white); }
+
+.bg-base       { background-color: var(--bg-base); }
+.bg-surface    { background-color: var(--bg-surface); }
+.bg-elevated   { background-color: var(--bg-elevated); }
+
+.border-default { border: 1px solid var(--border); }
+.border-active  { border: 1px solid var(--accent); }
+
+/* Scan line skeleton */
+.skeleton {
+  position: relative;
+  background-color: var(--bg-surface);
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(200, 255, 0, 0.2), transparent);
+  animation: scan-line 900ms linear infinite;
+}
+
+@keyframes scan-line {
+  0%   { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* Hard pulse (Single frame flash) */
+.hard-pulse {
+  animation: hard-pulse 2.5s infinite;
+}
+
+@keyframes hard-pulse {
+  0%, 96% { opacity: 1; }
+  98%     { opacity: 0; }
+  100%    { opacity: 1; }
+}
+
+/* Text invert copy animation */
+.inverted {
+  background-color: var(--text-primary);
+  color: var(--bg-base);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-base); border-left: 1px solid var(--border); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
