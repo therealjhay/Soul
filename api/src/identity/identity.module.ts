@@ -5,13 +5,16 @@ import {
   ParseIntPipe,
   NotFoundException,
   Inject,
+  UseGuards,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiParam } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from "@nestjs/swagger";
+import { AuthGuard } from "@nestjs/passport";
 import { Pool } from "pg";
 import Redis from "ioredis";
 import { PG_POOL, REDIS_CLIENT } from "../common/database.module";
 
 @ApiTags("identity")
+@ApiBearerAuth()
 @Controller("identity")
 export class IdentityController {
   constructor(
@@ -19,6 +22,7 @@ export class IdentityController {
     @Inject(REDIS_CLIENT) private readonly redis: Redis
   ) {}
 
+  @UseGuards(AuthGuard("jwt"))
   @Get(":id")
   @ApiOperation({ summary: "Get identity by ID" })
   @ApiParam({ name: "id", type: Number })
@@ -91,6 +95,20 @@ export class IdentityController {
 }
 
 import { Module } from "@nestjs/common";
+import { PassportModule } from "@nestjs/passport";
+import { JwtModule } from "@nestjs/jwt";
+import { IdentityController } from "./identity.controller";
+import { JwtStrategy } from "./jwt.strategy";
 
-@Module({ controllers: [IdentityController] })
+@Module({
+  imports: [
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || "secretKey",
+      signOptions: { expiresIn: "1h" },
+    }),
+  ],
+  controllers: [IdentityController],
+  providers: [JwtStrategy],
+})
 export class IdentityModule {}

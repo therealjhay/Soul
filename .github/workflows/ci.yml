@@ -15,15 +15,18 @@ jobs:
       run:
         working-directory: contracts
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4921130d313c01c03e30467c9c043e0f4f9f4423 # stable
         with:
           components: rustfmt, clippy
 
       - name: Build
         run: cargo build --workspace
+
+      - name: Audit
+        run: cargo install cargo-audit && cargo audit
 
       - name: Run tests
         run: cargo test --workspace
@@ -36,15 +39,15 @@ jobs:
       run:
         working-directory: graph-engine
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4921130d313c01c03e30467c9c043e0f4f9f4423 # stable
         with:
           components: rustfmt, clippy
 
       - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@23bce300f8285739cb50243229c13e93a77d130a # v2
         with:
           workspaces: graph-engine
 
@@ -60,6 +63,9 @@ jobs:
       - name: Build release
         run: cargo build --release
 
+      - name: Audit
+        run: cargo install cargo-audit && cargo audit
+
   # ─── Indexer ─────────────────────────────────────────────────────────────────
   indexer:
     name: Indexer (TypeScript)
@@ -68,10 +74,10 @@ jobs:
       run:
         working-directory: indexer
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@60edb5dd545a775178f5252478337817473d2d85 # v4
         with:
           node-version: "20"
           cache: "npm"
@@ -94,10 +100,10 @@ jobs:
       run:
         working-directory: api
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@60edb5dd545a775178f5252478337817473d2d85 # v4
         with:
           node-version: "20"
           cache: "npm"
@@ -114,16 +120,16 @@ jobs:
 
   # ─── Frontend ────────────────────────────────────────────────────────────────
   frontend:
-    name: Frontend (Next.js)
+    name: Frontend (VITE)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@60edb5dd545a775178f5252478337817473d2d85 # v4
         with:
           node-version: "20"
           cache: "npm"
@@ -138,5 +144,5 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:3000
-          NEXT_PUBLIC_SOLANA_CLUSTER: "devnet"
+          VITE_API_URL: http://localhost:3000
+          VITE_SOLANA_CLUSTER: "devnet"

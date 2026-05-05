@@ -11,8 +11,12 @@ export const REDIS_CLIENT = "REDIS_CLIENT";
     {
       provide: PG_POOL,
       useFactory: () => {
+        const connectionString = process.env.DATABASE_URL;
+        if (!connectionString) {
+          throw new Error("DATABASE_URL environment variable is required");
+        }
         const pool = new Pool({
-          connectionString: process.env.DATABASE_URL || "postgresql://rgp:rgp@localhost:5432/rgp",
+          connectionString,
           max: 20,
         });
         return pool;
@@ -21,7 +25,11 @@ export const REDIS_CLIENT = "REDIS_CLIENT";
     {
       provide: REDIS_CLIENT,
       useFactory: () => {
-        return new Redis(process.env.REDIS_URL || "redis://localhost:6379");
+        const redisUrl = process.env.REDIS_URL;
+        if (!redisUrl) {
+          throw new Error("REDIS_URL environment variable is required");
+        }
+        return new Redis(redisUrl);
       },
     },
   ],

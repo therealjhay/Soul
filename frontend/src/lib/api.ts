@@ -86,4 +86,4 @@ export const getProtocolStats = () =>
   api.get<ProtocolStats>('/stats').then(r => r.data)
 
 export const getPassport = (wallet: string) =>
-  api.get<Passport>(`/passport/${wallet}`).then(r => r.data)
+  api.get<Passport>(`/identity/wallet/${wallet}`).then(r => r.data)

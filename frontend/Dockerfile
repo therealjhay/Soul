@@ -15,7 +15,7 @@ ARG VITE_ATTESTATION_PROGRAM_ID
 ARG VITE_RGP_PROGRAM_ID
 RUN npm run build
 
-FROM nginx:alpine AS runner
+FROM nginx:alpine@sha256:4d6076249216069904944d5c9795f9c6e3b2e5399589d9e4878a05e263c9b7e7 AS runner
 # Copy built static files from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 # SPA routing setup for nginx

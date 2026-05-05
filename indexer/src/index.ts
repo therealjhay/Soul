@@ -11,15 +11,24 @@ import { DatabaseManager } from "./db/DatabaseManager";
 dotenv.config();
 
 const {
-  SOLANA_RPC_URL = "https://api.devnet.solana.com",
-  DATABASE_URL = "postgresql://rgp:rgp@localhost:5432/rgp",
-  REDIS_URL = "redis://localhost:6379",
-  IDENTITY_PROGRAM_ID = "",
-  SBT_PROGRAM_ID = "",
-  ATTESTATION_PROGRAM_ID = "",
+  SOLANA_RPC_URL,
+  DATABASE_URL,
+  REDIS_URL,
+  IDENTITY_PROGRAM_ID,
+  SBT_PROGRAM_ID,
+  ATTESTATION_PROGRAM_ID,
+  RGP_PROGRAM_ID,
   START_SLOT = "0",
   COMMITMENT = "confirmed",
 } = process.env;
+
+if (!SOLANA_RPC_URL) throw new Error("SOLANA_RPC_URL is required");
+if (!DATABASE_URL) throw new Error("DATABASE_URL is required");
+if (!REDIS_URL) throw new Error("REDIS_URL is required");
+if (!IDENTITY_PROGRAM_ID) throw new Error("IDENTITY_PROGRAM_ID is required");
+if (!SBT_PROGRAM_ID) throw new Error("SBT_PROGRAM_ID is required");
+if (!ATTESTATION_PROGRAM_ID) throw new Error("ATTESTATION_PROGRAM_ID is required");
+if (!RGP_PROGRAM_ID) throw new Error("RGP_PROGRAM_ID is required");
 
 async function main() {
   logger.info("Starting RGP Indexer");

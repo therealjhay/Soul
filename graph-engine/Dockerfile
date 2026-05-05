@@ -7,7 +7,7 @@ COPY Cargo.toml Cargo.lock* ./
 COPY src ./src
 RUN cargo build --release
 
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 RUN apt-get update && apt-get install -y ca-certificates libssl3 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=builder /app/target/release/rgp-graph-engine ./rgp-graph-engine
