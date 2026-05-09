@@ -6,6 +6,7 @@ import { IdentityModule } from "./identity/identity.module";
 import { AttestationModule } from "./attestation/attestation.module";
 import { GraphModule } from "./graph/graph.module";
 import { ZkModule } from "./zk/zk.module";
+import { ProtocolModule } from "./protocol/protocol.module";
 import { DatabaseModule } from "./common/database.module";
 import { HealthModule } from "./common/health.module";
 
@@ -18,6 +19,7 @@ import { HealthModule } from "./common/health.module";
     ReputationModule,
     IdentityModule,
     AttestationModule,
+    ProtocolModule,
     GraphModule,
     ZkModule,
   ],

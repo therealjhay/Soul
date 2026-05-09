@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Nav } from '../components/Nav'
 import { useWalletCtx } from '../context/WalletContext'
-import { getLiveEvents, SBTEvent } from '../lib/api'
-import { MOCK_EVENTS } from '../lib/mockData'
+import { getLiveEvents, getProtocolStats, SBTEvent } from '../lib/api'
+import { EMPTY_PROTOCOL_STATS } from '../lib/protocolData'
 import { useNumberTick } from '../hooks/useNumberTick'
 import { PageTransition } from '../components/PageTransition'
 
@@ -12,10 +12,11 @@ export default function LandingPage() {
   const navigate = useNavigate()
   const { isConnected, connect } = useWalletCtx()
   const [events, setEvents] = useState<SBTEvent[]>([])
+  const [stats, setStats] = useState(EMPTY_PROTOCOL_STATS)
 
-  const { ref: statsRef, value: wIdx } = useNumberTick(14502)
-  const { value: sIss } = useNumberTick(42819)
-  const { value: iReg } = useNumberTick(83)
+  const { ref: statsRef, value: wIdx } = useNumberTick(stats.total_wallets)
+  const { value: sIss } = useNumberTick(stats.sbts_issued)
+  const { value: iReg } = useNumberTick(stats.issuers_registered)
 
   useEffect(() => {
     if (isConnected) {
@@ -24,20 +25,12 @@ export default function LandingPage() {
   }, [isConnected, navigate])
 
   useEffect(() => {
-    getLiveEvents().then(setEvents).catch(() => setEvents(MOCK_EVENTS))
+    getLiveEvents().then(setEvents).catch(() => setEvents([]))
+    getProtocolStats().then(setStats).catch(() => setStats(EMPTY_PROTOCOL_STATS))
     const interval = setInterval(() => {
-      setEvents((prev) => {
-        const newEvent: SBTEvent = {
-          id: `ev-${Date.now()}`,
-          event_type: Math.random() > 0.8 ? 'PASSPORT_MINTED' : 'SBT_ISSUED',
-          wallet: '7xKX...' + Math.random().toString(36).substring(7).toUpperCase(),
-          issuer_name: ['Superteam', 'Marinade', 'Realms DAO'][Math.floor(Math.random() * 3)],
-          sbt_type: ['HACKATHON', 'STAKER', 'VOTER'][Math.floor(Math.random() * 3)],
-          timestamp: new Date().toISOString(),
-        }
-        return [newEvent, ...prev].slice(0, 12) // Max 12 visible entries
-      })
-    }, 5000)
+      getLiveEvents().then(setEvents).catch(() => setEvents([]))
+      getProtocolStats().then(setStats).catch(() => setStats(EMPTY_PROTOCOL_STATS))
+    }, 10_000)
     return () => clearInterval(interval)
   }, [])
 
@@ -78,7 +71,12 @@ export default function LandingPage() {
           
           <div style={{ flex: 1, position: 'relative' }}>
             <AnimatePresence>
-              {events.map((ev, i) => (
+              {events.length === 0 && (
+                <div className="data" style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Waiting for indexed devnet activity from the RGP program.
+                </div>
+              )}
+              {events.map((ev) => (
                 <motion.div
                   key={ev.id}
                   initial={{ opacity: 0, x: -20 }}

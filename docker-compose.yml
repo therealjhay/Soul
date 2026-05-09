@@ -111,6 +111,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        VITE_SOLANA_RPC_URL: ${VITE_SOLANA_RPC_URL:-https://api.devnet.solana.com}
         VITE_SOLANA_CLUSTER: ${VITE_SOLANA_CLUSTER:-devnet}
         VITE_IDENTITY_PROGRAM_ID: ${IDENTITY_PROGRAM_ID:-}
         VITE_SBT_PROGRAM_ID: ${SBT_PROGRAM_ID:-}
@@ -126,7 +127,7 @@ services:
   # ─── Monitoring ───────────────────────────────────────────────────────────────
 
   prometheus:
-    image: prom/prometheus@sha256:7393739373937393739373937393739373937393739373937393739373937393
+    image: prom/prometheus:v2.55.1
     container_name: rgp-prometheus
     restart: unless-stopped
     ports:
@@ -136,7 +137,7 @@ services:
       - prometheusdata:/prometheus
 
   grafana:
-    image: grafana/grafana@sha256:7393739373937393739373937393739373937393739373937393739373937393
+    image: grafana/grafana:11.3.0
     container_name: rgp-grafana
     restart: unless-stopped
     ports:
@@ -150,20 +151,8 @@ services:
     depends_on:
       - prometheus
 
-volumes:
-  pgdata:
-  redisdata:
-  prometheusdata:
-  grafanadata:
-: unless-stopped
-    environment:
-      DATA_SOURCE_NAME: postgresql://${POSTGRES_USER:-rgp}:${POSTGRES_PASSWORD:-rgp}@postgres:5432/${POSTGRES_DB:-rgp}?sslmode=disable
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   redis-exporter:
-    image: oliver006/redis_exporter@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+    image: oliver006/redis_exporter:v1.67.0
     container_name: rgp-redis-exporter
     restart: unless-stopped
     environment:

@@ -3,6 +3,7 @@ import { ConnectionProvider, WalletProvider, useWallet } from '@solana/wallet-ad
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets'
 import { clusterApiUrl } from '@solana/web3.js'
 import { motion, AnimatePresence } from 'framer-motion'
+import { SOLANA_CLUSTER, SOLANA_RPC_URL } from '../lib/protocolData'
 
 // ─── Custom Headless Modal Context ────────────────────────────────────────
 interface CustomWalletModalContextState {
@@ -84,7 +85,9 @@ function WalletConnectModal({ visible, onClose }: { visible: boolean; onClose: (
 
 export function WalletCtxProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false)
-  const endpoint = useMemo(() => clusterApiUrl('mainnet-beta'), [])
+  const endpoint = useMemo(() => (
+    SOLANA_RPC_URL || clusterApiUrl(SOLANA_CLUSTER === 'mainnet-beta' ? 'mainnet-beta' : 'devnet')
+  ), [])
   const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], [])
 
   return (

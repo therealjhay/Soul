@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Nav } from '../components/Nav'
 import { getIssuers, Issuer } from '../lib/api'
-import { MOCK_ISSUERS } from '../lib/mockData'
 import { useQuery } from '@tanstack/react-query'
 import { PageTransition } from '../components/PageTransition'
 
@@ -50,7 +49,7 @@ function ApplyOverlay({ onClose }: { onClose: () => void }) {
         <form onSubmit={e => { e.preventDefault(); setSubmitted(true) }} style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 40 }}>
           <div>
             <label className="input-label">ISSUER NAME</label>
-            <input className="input-field" type="text" placeholder="e.g. Superteam" required />
+            <input className="input-field" type="text" required />
           </div>
           <div>
             <label className="input-label">ISSUER TYPE</label>
@@ -63,7 +62,7 @@ function ApplyOverlay({ onClose }: { onClose: () => void }) {
           </div>
           <div>
             <label className="input-label">INTEGRATION URL</label>
-            <input className="input-field" type="url" placeholder="https://your-protocol.xyz" required />
+            <input className="input-field" type="url" required />
           </div>
           <button type="submit" className="btn btn--active" style={{ alignSelf: 'flex-start' }}>SUBMIT APPLICATION</button>
         </form>
@@ -137,7 +136,7 @@ function IssuerRow({ issuer }: { issuer: Issuer }) {
 export default function IssuersPage() {
   const [applyOpen, setApplyOpen] = useState(false)
   const { data: issuers, isLoading } = useQuery({
-    queryKey: ['issuers'], queryFn: getIssuers, retry: false, initialData: MOCK_ISSUERS,
+    queryKey: ['issuers'], queryFn: getIssuers, retry: false, initialData: [],
   })
   
   return (

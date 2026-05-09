@@ -30,21 +30,28 @@ if (!SBT_PROGRAM_ID) throw new Error("SBT_PROGRAM_ID is required");
 if (!ATTESTATION_PROGRAM_ID) throw new Error("ATTESTATION_PROGRAM_ID is required");
 if (!RGP_PROGRAM_ID) throw new Error("RGP_PROGRAM_ID is required");
 
+const solanaRpcUrl = SOLANA_RPC_URL;
+const databaseUrl = DATABASE_URL;
+const redisUrl = REDIS_URL;
+const identityProgramId = IDENTITY_PROGRAM_ID;
+const sbtProgramId = SBT_PROGRAM_ID;
+const attestationProgramId = ATTESTATION_PROGRAM_ID;
+
 async function main() {
   logger.info("Starting RGP Indexer");
 
   const commitment = COMMITMENT as Commitment;
-  const connection = new Connection(SOLANA_RPC_URL, commitment);
+  const connection = new Connection(solanaRpcUrl, commitment);
   const version = await connection.getVersion();
-  logger.info("Connected to Solana RPC", { rpc: SOLANA_RPC_URL, solanaCore: version["solana-core"] });
+  logger.info("Connected to Solana RPC", { rpc: solanaRpcUrl, solanaCore: version["solana-core"] });
 
   // Initialise DB
-  const pool = new Pool({ connectionString: DATABASE_URL });
+  const pool = new Pool({ connectionString: databaseUrl });
   const db = new DatabaseManager(pool);
   await db.migrate();
 
   // Initialise Redis
-  const redis = new Redis(REDIS_URL);
+  const redis = new Redis(redisUrl);
   redis.on("error", (err) => logger.error("Redis error", { err }));
   logger.info("Redis connected");
 
@@ -52,9 +59,9 @@ async function main() {
 
   // Start listeners
   const listeners = [
-    new IdentityListener(connection, IDENTITY_PROGRAM_ID, db, redis, startSlot),
-    new SBTListener(connection, SBT_PROGRAM_ID, db, redis, startSlot),
-    new AttestationListener(connection, ATTESTATION_PROGRAM_ID, db, redis, startSlot),
+    new IdentityListener(connection, identityProgramId, db, redis, startSlot),
+    new SBTListener(connection, sbtProgramId, db, redis, startSlot),
+    new AttestationListener(connection, attestationProgramId, db, redis, startSlot),
   ];
 
   for (const listener of listeners) {

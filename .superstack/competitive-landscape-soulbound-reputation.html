@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Soulbound Reputation Graph on Solana - Competitive Landscape</title>
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 40px; color: #111827; line-height: 1.5; }
+    h1, h2 { line-height: 1.15; }
+    table { border-collapse: collapse; width: 100%; margin: 18px 0 28px; }
+    th, td { border: 1px solid #d1d5db; padding: 10px; vertical-align: top; text-align: left; }
+    th { background: #f3f4f6; }
+    .tag { display: inline-block; padding: 2px 7px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 12px; }
+    .note { background: #f9fafb; border-left: 4px solid #6366f1; padding: 12px 14px; }
+  </style>
+</head>
+<body>
+  <h1>Soulbound Reputation Graph Protocol on Solana</h1>
+  <p><strong>Landscape date:</strong> 2026-05-08</p>
+  <p class="note">Conclusion: no obvious project owns the full wedge of Solana-native SBT attestations + portable identity + zk reputation proofs + open reputation graph + Sybil-resistant scoring. The market is moderately crowded around adjacent primitives: Solana Attestation Service, Civic, Solana ID, Solid, Trusta, Range, Human Passport, World ID, Galxe, EAS, BrightID, and Polygon ID.</p>
+
+  <h2>Competitive Matrix</h2>
+  <table>
+    <thead>
+      <tr><th>Project</th><th>Type</th><th>Chain / Scope</th><th>Status</th><th>Strength</th><th>Weakness / Gap</th><th>Threat</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Solana Attestation Service</td><td>Infrastructure</td><td>Solana</td><td>Live</td><td>Official public-good attestation layer with credentials, schemas, authorized signers, and on-chain attestations.</td><td>Primitive, not a reputation scoring network or zk proof product by itself.</td><td>High as dependency, low as direct competitor.</td></tr>
+      <tr><td>Civic Pass</td><td>Identity / access</td><td>Solana + multi-chain</td><td>Live</td><td>Known Solana identity provider for KYC, proof-of-personhood, bot/Sybil gating, and SAS compatibility.</td><td>More permissioning/compliance than open reputation graph.</td><td>High for identity/Sybil layer.</td></tr>
+      <tr><td>Solana ID</td><td>Identity / data marketing</td><td>Solana</td><td>Live / emerging</td><td>On-chain reputation/data targeting angle, SAS participant.</td><td>Not clearly positioned as open zk reputation graph infrastructure.</td><td>Medium.</td></tr>
+      <tr><td>Solid Labs</td><td>Identity passport</td><td>Solana</td><td>Emerging</td><td>Priority Pass identity, attestations, selective disclosure, reputation and staking concepts.</td><td>Product maturity and developer adoption still unclear.</td><td>Medium-high.</td></tr>
+      <tr><td>Trusta Labs</td><td>Sybil / reputation intelligence</td><td>Multi-chain, SAS member</td><td>Live</td><td>AI, behavior fingerprints, knowledge graph, wallet scoring, anti-Sybil services.</td><td>More analytics/attestation provider than neutral Solana-native graph protocol.</td><td>High.</td></tr>
+      <tr><td>Range</td><td>Risk intelligence</td><td>Solana / Cosmos</td><td>Live</td><td>Ingests SAS attestations into wallet labels and transaction risk scoring.</td><td>Security/risk product, not user-owned reputation protocol.</td><td>Medium.</td></tr>
+      <tr><td>Human Passport</td><td>Sybil identity</td><td>Mostly EVM / off-chain APIs</td><td>Live</td><td>Stamps, ML models, zk identity, human score, airdrop/grants protection.</td><td>Not Solana-native and not SBT-first, but strong substitute.</td><td>High substitute.</td></tr>
+      <tr><td>World ID</td><td>Proof of personhood</td><td>Global / multi-app</td><td>Live</td><td>Strong uniqueness signal, ZK proofs, nullifiers, privacy-preserving human proof.</td><td>Human uniqueness, not reputation graph; biometric adoption controversy/risk.</td><td>High substitute.</td></tr>
+      <tr><td>Galxe Identity / Passport</td><td>Credential + quest identity</td><td>Multi-chain / BNB Passport</td><td>Live</td><td>ZK identity protocol, SBT passport, large distribution/quest ecosystem.</td><td>Campaign/compliance orientation; not Solana-native graph scoring.</td><td>Medium-high substitute.</td></tr>
+      <tr><td>Ethereum Attestation Service</td><td>Attestation infrastructure</td><td>EVM</td><td>Live</td><td>Broad adoption, open schemas, large attestation counts, reputation use cases.</td><td>EVM, not Solana; neutral primitive rather than finished scoring app.</td><td>High conceptual benchmark.</td></tr>
+      <tr><td>BrightID</td><td>Social graph uniqueness</td><td>Off-chain / crypto integrations</td><td>Live</td><td>Privacy-first social graph Sybil resistance.</td><td>Adoption and UX bootstrapping are hard; not Solana-native SBT attestations.</td><td>Medium substitute.</td></tr>
+      <tr><td>Polygon ID / iden3</td><td>ZK identity stack</td><td>Polygon / EVM</td><td>Live</td><td>ZK-native identity, verifiable credentials, on-chain verification.</td><td>Not Solana-native; focused on DID/VC stack more than reputation graph.</td><td>Medium substitute.</td></tr>
+      <tr><td>Sismo</td><td>ZK badges / reputation</td><td>EVM</td><td>Ceased operations</td><td>Strong technical/product precedent for private reputation badges.</td><td>Shut down; warns that privacy identity infrastructure is hard to monetize and sustain.</td><td>Important dead-project lesson.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>White Space</h2>
+  <p>The strongest wedge is not to rebuild SAS. Build on SAS as the canonical attestation substrate, then specialize in open reputation graph computation, issuer/attestor weighting, zk score proofs, and developer APIs for apps that need portable trust without full KYC.</p>
+
+  <h2>Recommended Differentiation</h2>
+  <ul>
+    <li><span class="tag">Solana-native</span> Use SAS credentials/schemas/attestations instead of inventing another attestation primitive.</li>
+    <li><span class="tag">Graph-first</span> Make reputation contextual, explainable, and composable, not a single opaque human score.</li>
+    <li><span class="tag">Privacy</span> Publish signed score roots and support zk threshold proofs: "score >= X in context Y" without exposing the full graph.</li>
+    <li><span class="tag">Sybil</span> Combine issuer trust, graph topology, stake/slashing, account age, activity entropy, and known human proofs from partners.</li>
+    <li><span class="tag">Developer wedge</span> Target airdrops, DAO governance, grant programs, marketplaces, agent reputation, and undercollateralized access.</li>
+  </ul>
+</body>
+</html>

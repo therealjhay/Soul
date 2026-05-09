@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Module,
   Param,
   ParseIntPipe,
   NotFoundException,
@@ -22,6 +23,23 @@ export class IdentityController {
     @Inject(REDIS_CLIENT) private readonly redis: Redis
   ) {}
 
+  @Get("wallet/:address")
+  @ApiOperation({ summary: "Get identity by wallet address" })
+  async getByWallet(@Param("address") address: string) {
+    const cacheKey = `identity:wallet:${address.toLowerCase()}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
+
+    const res = await this.pool.query(
+      "SELECT * FROM identities WHERE primary_wallet = $1 OR lower(primary_wallet) = lower($1)",
+      [address]
+    );
+    if (!res.rows[0]) throw new NotFoundException(`No identity found for wallet ${address}`);
+
+    await this.redis.setex(cacheKey, 300, JSON.stringify(res.rows[0]));
+    return res.rows[0];
+  }
+
   @UseGuards(AuthGuard("jwt"))
   @Get(":id")
   @ApiOperation({ summary: "Get identity by ID" })
@@ -33,23 +51,6 @@ export class IdentityController {
 
     const res = await this.pool.query("SELECT * FROM identities WHERE identity_id = $1", [id]);
     if (!res.rows[0]) throw new NotFoundException(`Identity ${id} not found`);
-
-    await this.redis.setex(cacheKey, 300, JSON.stringify(res.rows[0]));
-    return res.rows[0];
-  }
-
-  @Get("wallet/:address")
-  @ApiOperation({ summary: "Get identity by wallet address" })
-  async getByWallet(@Param("address") address: string) {
-    const cacheKey = `identity:wallet:${address.toLowerCase()}`;
-    const cached = await this.redis.get(cacheKey);
-    if (cached) return JSON.parse(cached);
-
-    const res = await this.pool.query(
-      "SELECT * FROM identities WHERE primary_wallet = $1",
-      [address.toLowerCase()]
-    );
-    if (!res.rows[0]) throw new NotFoundException(`No identity found for wallet ${address}`);
 
     await this.redis.setex(cacheKey, 300, JSON.stringify(res.rows[0]));
     return res.rows[0];
@@ -94,10 +95,8 @@ export class IdentityController {
   }
 }
 
-import { Module } from "@nestjs/common";
 import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
-import { IdentityController } from "./identity.controller";
 import { JwtStrategy } from "./jwt.strategy";
 
 @Module({

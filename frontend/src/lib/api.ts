@@ -70,6 +70,31 @@ export interface Passport {
   version: string
 }
 
+export const emptyReputation = (wallet: string): WalletReputation => ({
+  wallet,
+  score: 0,
+  tier: 'NEWCOMER',
+  breakdown: [
+    { category: 'DEV', score: 0, percentage: 0 },
+    { category: 'GOVERNANCE', score: 0, percentage: 0 },
+    { category: 'DEFI', score: 0, percentage: 0 },
+    { category: 'SOCIAL', score: 0, percentage: 0 },
+    { category: 'OTHER', score: 0, percentage: 0 },
+  ],
+  last_updated: new Date(0).toISOString(),
+})
+
+export const emptyPassport = (wallet: string): Passport => ({
+  wallet,
+  exists: false,
+  score: 0,
+  tier: 'NEWCOMER',
+  issued_at: new Date(0).toISOString(),
+  last_updated: new Date(0).toISOString(),
+  sbt_count: 0,
+  version: '0.1.0-devnet',
+})
+
 export const getWalletSBTs = (wallet: string) =>
   api.get<SBTToken[]>(`/sbts/${wallet}`).then(r => r.data)
 
@@ -86,4 +111,4 @@ export const getProtocolStats = () =>
   api.get<ProtocolStats>('/stats').then(r => r.data)
 
 export const getPassport = (wallet: string) =>
-  api.get<Passport>(`/identity/wallet/${wallet}`).then(r => r.data)
+  api.get<Passport>(`/passport/${wallet}`).then(r => r.data)

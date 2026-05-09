@@ -62,25 +62,26 @@ function GuardianInput({ index, value, onChange }: { index: number, value: strin
 
 export default function RecoveryPage() {
   const { address } = useWalletCtx()
-  const wallet = address || "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
+  const wallet = address || ""
   
   const [step, setStep] = useState(0)
   const [guardians, setGuardians] = useState(['', '', ''])
   const [submitting, setSubmitting] = useState(false)
   const [configHash, setConfigHash] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const allValid = guardians.filter(isValidSolanaAddress).length === 3
 
   const handleSubmit = async () => {
     setSubmitting(true)
+    setSubmitError(null)
     try {
       const res = await submitRecovery(wallet, guardians)
       setConfigHash(res.configHash)
       setTimeout(() => setStep(3), 800)
-    } catch {
-      // Handle error gracefully
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Recovery transaction failed.')
     } finally {
-      // Submitting kept true momentarily for lock animation
       setTimeout(() => setSubmitting(false), 800)
     }
   }
@@ -180,6 +181,11 @@ export default function RecoveryPage() {
                     {submitting ? "EXECUTING..." : "SIGN & LOCK IN →"}
                   </button>
                 </div>
+                {submitError && (
+                  <div className="data" style={{ color: 'var(--error)', fontSize: 12, marginTop: 24 }}>
+                    {submitError}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

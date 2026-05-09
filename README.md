@@ -1,133 +1,112 @@
-# 🧠 SolanaRGP — Soulbound Reputational Graph Protocol
+# SolanaRGP: Soulbound Reputational Graph Protocol
 
-A modular, privacy-aware reputation system built for **Solana**.
+SolanaRGP is a devnet-ready reputation protocol that turns identity registrations, soulbound credentials, and attestations emitted by the RGP Solana program into an indexed reputation passport.
 
 ## Architecture
 
-```
-Solana Program (Rust) -> Indexer (TypeScript + @solana/web3.js) -> PostgreSQL/Redis
-                                                      |
-                                             Graph Engine (Rust)
-                                                      |
-                                               API (NestJS)
-                                                      |
-                                             Frontend (Next.js)
+```text
+RGP Solana Program (Rust)
+  -> Indexer (TypeScript + @solana/web3.js)
+  -> PostgreSQL + Redis
+  -> Graph Engine (Rust)
+  -> API (NestJS)
+  -> Frontend (Vite + React)
 ```
 
 ## Modules
 
 | Module | Technology | Purpose |
 |---|---|---|
-| `contracts/` | Rust + Solana Program | On-chain identity/credential/attestation instruction surface |
-| `indexer/` | TypeScript + Solana web3 | Program log indexing into Postgres + Redis |
-| `graph-engine/` | Rust | Reputation graph scoring, ranking, sybil heuristics |
-| `api/` | NestJS | REST API for identity, attestations, reputation, zk endpoints |
-| `frontend/` | Next.js | Wallet-connected dashboard |
-| `zk/` | Circom | Privacy proofs |
+| `contracts/` | Rust + Solana Program | RGP instruction processor for identities, SBT credentials, and attestations |
+| `indexer/` | TypeScript + Solana web3.js | Subscribes to RGP program logs and writes indexed state to Postgres |
+| `graph-engine/` | Rust | Reputation graph scoring, ranking, and sybil heuristics |
+| `api/` | NestJS | REST API for indexed protocol stats, events, issuers, passports, graph, reputation, and zk endpoints |
+| `frontend/` | Vite + React | Solana wallet-connected dashboard and passport UI |
+| `zk/` | Circom | Membership and reputation-threshold proof circuits |
 
-## Solana Migration Notes
+## Devnet Configuration
 
-- EVM/Hardhat/Solidity stack has been removed from `contracts/`.
-- Frontend wallet connection now targets Solana wallets (Phantom-compatible provider API).
-- Indexer now connects to Solana RPC and subscribes to program logs.
-- Environment and Docker wiring use Solana RPC and Program IDs.
-
-## Quick Start
-
-### Prerequisites
-- Node.js 20+
-- Rust 1.76+
-- Docker + Docker Compose
-
-### 1. Configure env
+Copy the environment template:
 
 ```bash
 cp .env.example .env
 ```
 
-Set:
-- `SOLANA_RPC_URL`
-- `IDENTITY_PROGRAM_ID`
-- `SBT_PROGRAM_ID`
-- `ATTESTATION_PROGRAM_ID`
+Before the first deploy, `RGP_PROGRAM_ID`, `IDENTITY_PROGRAM_ID`, `SBT_PROGRAM_ID`, `ATTESTATION_PROGRAM_ID`, and `VITE_RGP_PROGRAM_ID` should stay empty. After the RGP program is deployed to devnet, set all five values to the deployed program ID. The current indexer uses separate listeners for the identity, SBT, and attestation log families emitted by the same program.
 
-### 2. Start infra
+Required local values:
 
-```bash
-docker-compose up -d postgres redis
+```text
+SOLANA_RPC_URL=https://api.devnet.solana.com
+VITE_SOLANA_RPC_URL=https://api.devnet.solana.com
+VITE_SOLANA_CLUSTER=devnet
+SOLANA_KEYPAIR_PATH=~/.config/solana/id.json
+DATABASE_URL=postgresql://rgp:rgp@localhost:5432/rgp
+REDIS_URL=redis://localhost:6379
+CORS_ORIGIN=http://localhost:3001
+VITE_API_URL=http://localhost:3000
 ```
 
-### 3. Build Solana program
+## Local Runbook
+
+Start Postgres and Redis:
+
+```bash
+docker compose up -d postgres redis
+```
+
+Build the Solana program:
 
 ```bash
 cd contracts
 cargo build --workspace
 ```
 
-### 4. Run indexer
+Build the SBF artifact when the Solana CLI toolchain is installed:
 
 ```bash
-cd indexer
-npm install
-npm run dev
+cd contracts
+cargo build-sbf
 ```
 
-### 5. Run graph engine
+Run the services:
 
 ```bash
-cd graph-engine
-cargo run
+cd indexer && npm ci && npm run dev
+cd api && npm ci && npm run start:dev
+cd graph-engine && cargo run
+cd frontend && npm ci && npm run dev
 ```
 
-### 6. Run API
+Useful URLs:
 
-```bash
-cd api
-npm install
-npm run start:dev
+```text
+Frontend: http://localhost:5173
+API: http://localhost:3000
+API docs: http://localhost:3000/docs
+Grafana: http://localhost:3002
+Prometheus: http://localhost:9090
 ```
 
-### 7. Run frontend
+## Devnet Deploy Checklist
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+1. Install and configure the Solana CLI for devnet.
+2. Fund the deploy keypair with devnet SOL.
+3. Build the RGP SBF artifact from `contracts/`.
+4. Deploy the program and capture the program ID.
+5. Set `RGP_PROGRAM_ID`, `IDENTITY_PROGRAM_ID`, `SBT_PROGRAM_ID`, `ATTESTATION_PROGRAM_ID`, and `VITE_RGP_PROGRAM_ID` to that program ID.
+6. Start Postgres, Redis, API, indexer, graph engine, and frontend.
+7. Submit one identity registration and one SBT mint transaction.
+8. Confirm `/stats`, `/events`, `/issuers`, `/sbts/:wallet`, `/reputation/wallet/:wallet`, and `/passport/:wallet` return indexed devnet data.
 
-## Testing
+## Verification
 
 ```bash
 cd contracts && cargo test --workspace
 cd graph-engine && cargo test
-```
-
-## Deployment Readiness (No Deployment Yet)
-
-- CI uses lockfile-based installs (`npm ci`) for deterministic builds.
-- Docker image publish workflow is now **manual only** via `workflow_dispatch` (`.github/workflows/deploy.yml`).
-- Solana program now includes protocol instructions and state models for identity, SBTs, and attestations.
-- Build the app stack locally:
-
-```bash
-cd indexer && npm ci && npm run build
-cd ../api && npm ci && npm run build
-cd ../frontend && npm ci && npm run build
-```
-
-- Build containers when Docker is available:
-
-```bash
-docker compose build indexer api frontend graph-engine
-```
-
-- Build Solana deploy artifact:
-
-```bash
-cd contracts
-cargo build --release -p rgp-solana-program
-# Use Solana toolchain for BPF/SBF artifact when ready:
-# cargo build-sbf
+cd api && npm run build
+cd frontend && npm run build
+cd indexer && npm run build
 ```
 
 ## License

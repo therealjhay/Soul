@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useWalletCtx } from '../context/WalletContext'
-import { truncateAddress } from '../lib/mockData'
+import { truncateAddress } from '../lib/protocolData'
 
 export function Nav() {
   const { isConnected, address, connect, disconnect } = useWalletCtx()

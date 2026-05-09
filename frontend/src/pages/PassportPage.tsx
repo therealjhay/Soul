@@ -1,9 +1,11 @@
 import { useState, useRef, MouseEvent, useEffect } from 'react'
 import { motion, useAnimation } from 'framer-motion'
+import { useQuery } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
 import { Nav } from '../components/Nav'
 import { useWalletCtx } from '../context/WalletContext'
-import { MOCK_PASSPORT, MOCK_REPUTATION, truncateAddress } from '../lib/mockData'
+import { emptyPassport, emptyReputation, getPassport, getWalletReputation } from '../lib/api'
+import { RGP_PROTOCOL_VERSION, SOLANA_CLUSTER, truncateAddress } from '../lib/protocolData'
 import { PageTransition } from '../components/PageTransition'
 
 // ─── 3D Passport Card ─────────────────────────────────────────────────────
@@ -75,7 +77,7 @@ function PassportCard({ wallet, score, tier, issuedAt, version }: any) {
             {/* Depth Layer 1 (Z=20px) */}
             <div style={{ transform: 'translateZ(20px)', display: 'flex', justifyContent: 'space-between' }}>
               <div className="label">SOUL PASSPORT</div>
-              <div className="data" style={{ fontSize: 10, color: 'var(--text-muted)' }}>v{version} // SOLANA_MAINNET</div>
+              <div className="data" style={{ fontSize: 10, color: 'var(--text-muted)' }}>v{version} // SOLANA_{SOLANA_CLUSTER.toUpperCase()}</div>
             </div>
 
             {/* Depth Layer 2 (Z=60px) */}
@@ -100,7 +102,6 @@ function PassportCard({ wallet, score, tier, issuedAt, version }: any) {
               </div>
             </div>
             
-            {/* Issuer Seal Mosaic placeholder */}
             <div style={{ position: 'absolute', bottom: 32, right: 32, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, transform: 'translateZ(20px)' }}>
               {[1,2,3,4,5,6,7,8,9].map(i => (
                 <div key={i} style={{ width: 4, height: 4, backgroundColor: 'var(--text-muted)' }} />
@@ -164,9 +165,19 @@ function PerspectiveGrid() {
 
 export default function PassportPage() {
   const { address } = useWalletCtx()
-  const wallet = address || MOCK_PASSPORT.wallet
-  const reputation = MOCK_REPUTATION
-  const passport = MOCK_PASSPORT
+  const wallet = address || ''
+  const { data: reputation = emptyReputation(wallet) } = useQuery({
+    queryKey: ['passport-reputation', wallet],
+    queryFn: () => getWalletReputation(wallet),
+    enabled: Boolean(wallet),
+    retry: false,
+  })
+  const { data: passport = emptyPassport(wallet) } = useQuery({
+    queryKey: ['passport', wallet],
+    queryFn: () => getPassport(wallet),
+    enabled: Boolean(wallet),
+    retry: false,
+  })
 
   return (
     <PageTransition>
@@ -181,7 +192,7 @@ export default function PassportPage() {
             tier={reputation.tier}
             issuedAt={passport.issued_at}
             sbtCount={passport.sbt_count}
-            version={passport.version}
+            version={passport.version || RGP_PROTOCOL_VERSION}
           />
         </div>
       </main>

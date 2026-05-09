@@ -1,8 +1,10 @@
 import { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, useAnimation } from 'framer-motion'
+import { useQuery } from '@tanstack/react-query'
 import { useWalletCtx } from '../context/WalletContext'
-import { MOCK_REPUTATION, MOCK_SBTS, truncateAddress } from '../lib/mockData'
+import { emptyReputation, getWalletReputation, getWalletSBTs } from '../lib/api'
+import { truncateAddress } from '../lib/protocolData'
 import { useGlitchText } from '../hooks/useGlitchText'
 import { useNumberTick } from '../hooks/useNumberTick'
 import { PageTransition } from '../components/PageTransition'
@@ -105,9 +107,19 @@ function SBTCard({ sbt }: { sbt: any }) {
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { address } = useWalletCtx()
-  const wallet = address || MOCK_REPUTATION.wallet
-  const reputation = MOCK_REPUTATION
-  const sbts = MOCK_SBTS
+  const wallet = address || ''
+  const { data: reputation = emptyReputation(wallet) } = useQuery({
+    queryKey: ['wallet-reputation', wallet],
+    queryFn: () => getWalletReputation(wallet),
+    enabled: Boolean(wallet),
+    retry: false,
+  })
+  const { data: sbts = [], isLoading: sbtsLoading } = useQuery({
+    queryKey: ['wallet-sbts', wallet],
+    queryFn: () => getWalletSBTs(wallet),
+    enabled: Boolean(wallet),
+    retry: false,
+  })
 
   const [filter, setFilter] = useState('ALL')
   const filters = ['ALL', 'DEV', 'GOVERNANCE', 'SOCIAL', 'DEFI']
@@ -179,6 +191,11 @@ export default function DashboardPage() {
 
           <div style={{ flex: 1, padding: '48px', overflowY: 'auto' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
+              {!sbtsLoading && filteredSBTs.length === 0 && (
+                <div className="data" style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  No indexed RGP credentials found for this devnet wallet yet.
+                </div>
+              )}
               {filteredSBTs.map((sbt, i) => (
                 <motion.div key={sbt.token_id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
                   <SBTCard sbt={sbt} />
@@ -216,8 +233,10 @@ export default function DashboardPage() {
 
           <div style={{ flex: 1, padding: '32px 24px', overflowY: 'auto' }}>
             <div className="label" style={{ marginBottom: 24 }}>RECENT ACTIVITY</div>
-            {/* Skeleton state example if loading */}
-            {!sbts.length && <div className="skeleton" style={{ height: 48, width: '100%' }} />}
+            {sbtsLoading && <div className="skeleton" style={{ height: 48, width: '100%' }} />}
+            {!sbtsLoading && !sbts.length && (
+              <div className="data" style={{ color: 'var(--text-secondary)', fontSize: 12 }}>No credential events indexed.</div>
+            )}
             {sbts.slice(0, 4).map((sbt, i) => (
               <motion.div key={sbt.token_id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 + i * 0.06 }} style={{ marginBottom: 16 }}>
                 <div className="data" style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
